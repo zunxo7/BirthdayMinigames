@@ -30,6 +30,7 @@ export class Game {
         this.accumulator = 0;
         this.step = 1 / 60;
         this.isRunning = false;
+        this.hasStarted = false;
         this.isStopped = false; // Permanent stop flag
         this.isPaused = false; // Temporary pause flag
 
@@ -106,6 +107,7 @@ export class Game {
 
     start() {
         if (this.isStopped) return; // Don't start if permanently stopped
+        this.hasStarted = true;
         this.isRunning = true;
         this.lastTime = performance.now();
         requestAnimationFrame(this.loop.bind(this));

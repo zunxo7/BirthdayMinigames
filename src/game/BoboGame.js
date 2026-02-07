@@ -1,7 +1,6 @@
 import { Game } from './Game';
 import { Sprite } from './Sprite';
 import { Particle } from './Particle';
-import { CANVAS_WIDTH, CANVAS_HEIGHT, GROUND_Y_COORD } from './Constants';
 import boboUrl from '../assets/Bobo.webp';
 import cakeUrl from '../assets/Cake.webp';
 import cupcakeUrl from '../assets/Cupcake.webp';
@@ -24,8 +23,8 @@ class BoboPlayer {
         this.scale = 0.3645 * 0.9;
         this.width = 278 * this.scale;
         this.height = 402 * this.scale;
-        this.x = CANVAS_WIDTH / 2;
-        this.groundY = CANVAS_HEIGHT - 190;
+        this.x = this.game.width / 2;
+        this.groundY = this.game.height - 190;
         this.y = this.groundY;
         this.vx = 0;
         this.vy = 0;
@@ -80,8 +79,9 @@ class BoboPlayer {
         }
 
         this.x += this.vx * dt;
+        this.groundY = this.game.height - 190;
         if (this.x < this.width / 2) this.x = this.width / 2;
-        if (this.x > CANVAS_WIDTH - this.width / 2) this.x = CANVAS_WIDTH - this.width / 2;
+        if (this.x > this.game.width - this.width / 2) this.x = this.game.width - this.width / 2;
 
         const isGrounded = this.y >= this.groundY - 2;
         if (this.game.input.isDown(' ') || this.game.input.isDown('ArrowUp') || this.game.input.isDown('w')) {
@@ -276,7 +276,6 @@ export class BoboGame extends Game {
     }
 
     async start() {
-        await this.loadAssets();
         super.start();
     }
 
@@ -364,7 +363,7 @@ export class BoboGame extends Game {
                 item.markedForDeletion = true;
             }
 
-            if (item.y > CANVAS_HEIGHT) {
+            if (item.y > this.height) {
                 if (item.type === 'sweet') {
                     this.consecutiveSweets = 0;
                     this.player.triggerSad();
@@ -446,7 +445,7 @@ export class BoboGame extends Game {
     }
 
     spawnItem(type) {
-        const x = 50 + Math.random() * (CANVAS_WIDTH - 100);
+        const x = 50 + Math.random() * (this.width - 100);
         let img;
         if (type === 'sweet') {
             img = this.assets.sweets[Math.floor(Math.random() * this.assets.sweets.length)];

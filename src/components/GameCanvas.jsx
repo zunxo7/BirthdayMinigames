@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, Heart, HandPointing, Lightning, Pause, Skull, Trophy } from '@phosphor-icons/react';
+import { ArrowLeft, Heart, Lightning, Pause, Skull, Trophy } from '@phosphor-icons/react';
 import { PinataGame } from '../game/PinataGame';
 import { FlappyGame } from '../game/FlappyGame';
 import { BoboGame } from '../game/BoboGame';
@@ -8,7 +8,60 @@ import { useCandyMultiplier } from '../context/CandyMultiplierContext';
 import { supabase } from '../supabase';
 import candyIcon from '../assets/Candy Icon.webp';
 import heartImg from '../assets/Heart.webp';
+import medkitImg from '../assets/Medkit.webp';
+import speedImg from '../assets/Speed.webp';
+import knockbackImg from '../assets/Knockback.webp';
+import cakeImg from '../assets/Cake.webp';
+import cupcakeImg from '../assets/Cupcake.webp';
+import donutImg from '../assets/Donut.webp';
+import lollipopImg from '../assets/Lollipop.webp';
+import carrotImg from '../assets/Carrot.webp';
+import eggplantImg from '../assets/Eggplant.webp';
+import capsicumImg from '../assets/Capsicum.webp';
+import broccoliImg from '../assets/Broccoli.webp';
+import pickleImg from '../assets/Pickle.webp';
 import InGameUpgrades from './InGameUpgrades';
+
+const TUTORIALS = {
+    pinata: {
+        title: 'Crumb Clash',
+        controls: ['Click or tap to punch', 'Space to punch', 'Move with mouse / touch'],
+        goal: 'Survive as long as you can. Punch enemies from the sides and collect candy.',
+        upgrades: [
+            { img: medkitImg, label: 'Medkit', desc: 'Restores health' },
+            { img: speedImg, label: 'Speed', desc: 'Temporary movement boost' },
+            { img: knockbackImg, label: 'Knockback', desc: 'Temporary stronger punches' }
+        ],
+        upgradesNote: 'Open STATS (trophy) to spend candy on permanent upgrades: Damage, Punch Speed, Knockback, Movement, Max Health. After 75s it gets much harder — upgrade or die!'
+    },
+    flappy: {
+        title: 'Flappy Frosti',
+        controls: ['Tap, click, or Space to flap'],
+        goal: 'Fly through the gaps in the pipes. Don\'t hit the obstacles!',
+        upgrades: [
+            { img: medkitImg, label: 'Medkit', desc: 'Collect in the gap for +1 life. Spawns after 3 pipes.' }
+        ]
+    },
+    cake: {
+        title: 'Bobo Catch',
+        controls: ['A / D or Arrow keys to move left and right'],
+        goal: 'Fill the basket! Use STATS to buy speed.',
+        catch: [
+            { img: cakeImg, label: 'Cake' },
+            { img: cupcakeImg, label: 'Cupcake' },
+            { img: donutImg, label: 'Donut' },
+            { img: lollipopImg, label: 'Lollipop' },
+            { img: candyIcon, label: 'Candy' }
+        ],
+        avoid: [
+            { img: carrotImg, label: 'Carrot' },
+            { img: eggplantImg, label: 'Eggplant' },
+            { img: capsicumImg, label: 'Capsicum' },
+            { img: broccoliImg, label: 'Broccoli' },
+            { img: pickleImg, label: 'Pickle' }
+        ]
+    }
+};
 
 const GameCanvas = ({ gameType, onBack }) => {
     const canvasRef = useRef(null);
@@ -16,7 +69,7 @@ const GameCanvas = ({ gameType, onBack }) => {
     const isMountedRef = useRef(true);
     const gameOverRef = useRef(false);
     const visibilityPausedRef = useRef(false);
-    const { user, updateCandies } = useAuth();
+    const { user, profile, updateCandies } = useAuth();
     const { multiplier: candyMultiplier } = useCandyMultiplier();
     const candyMultiplierRef = useRef(candyMultiplier);
     candyMultiplierRef.current = candyMultiplier;
@@ -31,6 +84,9 @@ const GameCanvas = ({ gameType, onBack }) => {
     const [showStats, setShowStats] = useState(false);
     const [isPaused, setIsPaused] = useState(false);
     const [showVisibilityPauseOverlay, setShowVisibilityPauseOverlay] = useState(false);
+    const [showTutorial, setShowTutorial] = useState(() => profile?.show_tutorials !== false);
+    const [assetsLoading, setAssetsLoading] = useState(true);
+    const [flappyLives, setFlappyLives] = useState(2);
     const [runStats, setRunStats] = useState({
         damage: 0,
         speed: 0,
@@ -47,6 +103,9 @@ const GameCanvas = ({ gameType, onBack }) => {
         setFinalScore({ score: 0, currency: 0 });
         setIsPaused(false);
         setShowVisibilityPauseOverlay(false);
+        const wantTutorial = profile?.show_tutorials !== false;
+        setShowTutorial(wantTutorial);
+        setAssetsLoading(true);
         gameOverRef.current = false;
         visibilityPausedRef.current = false;
         // Set initial health based on game type to avoid visual glitch
@@ -55,6 +114,7 @@ const GameCanvas = ({ gameType, onBack }) => {
         setCurrency(0);
         setNotifications([]);
         setIsFlappyStarted(false);
+        if (gameType === 'flappy') setFlappyLives(2);
         isMountedRef.current = true;
 
         if (gameRef.current) {
@@ -140,10 +200,21 @@ const GameCanvas = ({ gameType, onBack }) => {
         fetchBestScore();
 
         gameRef.current = game;
-        game.start();
+        (async () => {
+            try {
+                if (typeof game.loadAssets === 'function') {
+                    await game.loadAssets();
+                }
+            } finally {
+                if (isMountedRef.current && gameRef.current === game) {
+                    setAssetsLoading(false);
+                    if (!wantTutorial) game.start();
+                }
+            }
+        })();
 
         const hudInterval = setInterval(() => {
-            if (game && isMountedRef.current && gameRef.current === game) {
+            if (game && isMountedRef.current && gameRef.current === game && game.hasStarted) {
                 if (game.player && gameType !== 'flappy') {
                     setPlayerHealth({
                         hp: game.player.hp,
@@ -154,6 +225,7 @@ const GameCanvas = ({ gameType, onBack }) => {
 
                 if (gameType === 'flappy') {
                     setIsFlappyStarted(game.isGameStarted);
+                    if (game.lives !== undefined) setFlappyLives(game.lives);
                 }
 
                 if (game.player && game.player.getActiveBuffs) {
@@ -186,7 +258,7 @@ const GameCanvas = ({ gameType, onBack }) => {
                 }
                 return;
             }
-            if (!gameRef.current || gameRef.current.isStopped || gameOverRef.current) {
+            if (!gameRef.current || !gameRef.current.hasStarted || gameRef.current.isStopped || gameOverRef.current) {
                 return;
             }
             visibilityPausedRef.current = true;
@@ -208,6 +280,10 @@ const GameCanvas = ({ gameType, onBack }) => {
 
     const handleBackClick = (e) => {
         e.stopPropagation();
+        if (showTutorial) {
+            onBack();
+            return;
+        }
         if (gameOver) {
             handleLeave();
             return;
@@ -321,6 +397,21 @@ const GameCanvas = ({ gameType, onBack }) => {
                         <img src={candyIcon} alt="Candy" className="candy-icon" />
                         <span>{currency}</span>
                     </div>
+
+                    {gameType === 'flappy' && !gameOver && (
+                        <div className="health-container health-hearts">
+                            {[0, 1].map((i) => (
+                                <img
+                                    key={i}
+                                    src={heartImg}
+                                    alt=""
+                                    className="heart-icon"
+                                    style={{ opacity: i < flappyLives ? 1 : 0.25 }}
+                                    aria-hidden
+                                />
+                            ))}
+                        </div>
+                    )}
 
                     {(gameType === 'pinata' || gameType === 'cake') && !gameOver && (
                         <button
@@ -487,17 +578,101 @@ const GameCanvas = ({ gameType, onBack }) => {
                 </div>
             )}
 
-            {/* Pre-start Overlay */}
-            {gameType === 'flappy' && !isFlappyStarted && !gameOver && (
-                <div className="pre-start-overlay">
-                    <div className="pre-start-card">
-                        <h2 className="get-ready-text">GET READY!</h2>
-                        <div className="pre-start-content">
-                            <div className="tap-icon-circle">
-                                <HandPointing size={40} weight="fill" />
-                            </div>
-                            <span className="tap-text">TAP TO FLAP</span>
+            {/* Game loading — assets loading (game-themed) */}
+            {assetsLoading && (
+                <div className={`game-loading-overlay mode-${gameType}`}>
+                    <div className="game-loading-content">
+                        <div className="game-loading-spinner" aria-hidden />
+                        <p className="game-loading-text">Loading game...</p>
+                    </div>
+                </div>
+            )}
+
+            {/* Tutorial overlay — shown before game starts */}
+            {showTutorial && !gameOver && !assetsLoading && (
+                <div className={`tutorial-overlay mode-${gameType}`}>
+                    <div className="tutorial-card">
+                        <h2 className="tutorial-title">How to Play</h2>
+                        <h3 className="tutorial-game-name">{TUTORIALS[gameType]?.title ?? gameType}</h3>
+                        <div className="tutorial-section">
+                            <span className="tutorial-label">Controls</span>
+                            <ul className="tutorial-list">
+                                {(TUTORIALS[gameType]?.controls ?? []).map((c, i) => (
+                                    <li key={i}>{c}</li>
+                                ))}
+                            </ul>
                         </div>
+                        <div className="tutorial-section">
+                            <span className="tutorial-label">Goal</span>
+                            <p className="tutorial-goal">{TUTORIALS[gameType]?.goal ?? ''}</p>
+                            {gameType === 'flappy' && <p className="tutorial-lives-subtitle">You have 2 lives.</p>}
+                        </div>
+                        {gameType === 'pinata' && TUTORIALS.pinata.upgrades && (
+                            <div className="tutorial-section tutorial-upgrades">
+                                <span className="tutorial-label">Upgrades</span>
+                                <p className="tutorial-upgrades-subtitle">Spawns on ground</p>
+                                <div className="tutorial-upgrades-grid">
+                                    {TUTORIALS.pinata.upgrades.map((u, i) => (
+                                        <div key={i} className="tutorial-upgrade-item">
+                                            <img src={u.img} alt="" className="tutorial-upgrade-img" />
+                                            <div className="tutorial-upgrade-text">
+                                                <strong>{u.label}</strong>
+                                                <span>{u.desc}</span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                                <p className="tutorial-goal tutorial-upgrades-note">{TUTORIALS.pinata.upgradesNote}</p>
+                            </div>
+                        )}
+                        {gameType === 'flappy' && TUTORIALS.flappy.upgrades && (
+                            <div className="tutorial-section tutorial-upgrades">
+                                <span className="tutorial-label">Upgrades</span>
+                                <div className="tutorial-upgrades-grid">
+                                    {TUTORIALS.flappy.upgrades.map((u, i) => (
+                                        <div key={i} className="tutorial-upgrade-item">
+                                            <img src={u.img} alt="" className="tutorial-upgrade-img" />
+                                            <div className="tutorial-upgrade-text">
+                                                <strong>{u.label}</strong>
+                                                <span>{u.desc}</span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                        {gameType === 'cake' && (TUTORIALS.cake.catch?.length || TUTORIALS.cake.avoid?.length) && (
+                            <div className="tutorial-section tutorial-upgrades">
+                                <span className="tutorial-label">Catch (sweets)</span>
+                                <div className="tutorial-icons-row">
+                                    {TUTORIALS.cake.catch.map((s, i) => (
+                                        <div key={i} className="tutorial-icon-item" title={s.label}>
+                                            <img src={s.img} alt="" className="tutorial-icon-img" />
+                                            <span className="tutorial-icon-label">{s.label}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                                <span className="tutorial-label">Avoid (veggies)</span>
+                                <div className="tutorial-icons-row">
+                                    {TUTORIALS.cake.avoid.map((v, i) => (
+                                        <div key={i} className="tutorial-icon-item tutorial-avoid" title={v.label}>
+                                            <img src={v.img} alt="" className="tutorial-icon-img" />
+                                            <span className="tutorial-icon-label">{v.label}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                        <button
+                            className="tutorial-start-btn"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setShowTutorial(false);
+                                gameRef.current?.start();
+                            }}
+                        >
+                            Start
+                        </button>
                     </div>
                 </div>
             )}

@@ -2,6 +2,7 @@ import { Game } from './Game';
 import { CANVAS_WIDTH, CANVAS_HEIGHT } from './Constants';
 import frostiUrl from '../assets/Frosti.webp';
 import candyIconUrl from '../assets/Candy Icon.webp';
+import medkitUrl from '../assets/Medkit.webp';
 
 // Breakpoints: phone < 480, tablet < 768, desktop >= 768
 function getFlappyScale(width) {
@@ -33,9 +34,14 @@ export class FlappyGame extends Game {
             frameTimer: 0
         };
 
+        this.lives = 2;
+        this.maxLives = 2;
+        this.invincibleUntil = 0;
+
         this.isGameStarted = false;
 
         this.pipes = [];
+        this.medkits = [];
         this.pipeTimer = 0;
         this.pipeInterval = 2.0;
         this.pipeWidth = 100;
@@ -46,8 +52,6 @@ export class FlappyGame extends Game {
         this.nextNotificationId = 0;
 
         this.applyBreakpoints();
-
-        this.loadAssets();
     }
 
     applyBreakpoints() {
@@ -70,6 +74,7 @@ export class FlappyGame extends Game {
 
         this.assets.bird = await loadImage(frostiUrl);
         this.assets.candy = await loadImage(candyIconUrl);
+        this.assets.medkit = await loadImage(medkitUrl);
     }
 
     handleInput(type) {
@@ -112,7 +117,8 @@ export class FlappyGame extends Game {
             this.player.velocity = 0;
         }
         if (this.player.y + this.player.height > this.height) {
-            this.gameOver();
+            this.hitObstacle();
+            return;
         }
 
         // Pipes - only update if game has started
@@ -123,7 +129,8 @@ export class FlappyGame extends Game {
                 this.pipeTimer = 0;
             }
 
-            this.pipes.forEach((pipe, index) => {
+            let pipeHit = false;
+            this.pipes.forEach((pipe) => {
                 pipe.x -= this.speed * dt;
 
                 // Score check
@@ -135,16 +142,30 @@ export class FlappyGame extends Game {
                     this.addNotification("+1 Candy!", "flappyCandy");
                 }
 
-                // Collision check
-                if (this.checkCollision(this.player, pipe)) {
-                    this.gameOver();
-                }
-
-                // Remove off-screen pipes
-                if (pipe.x + this.pipeWidth < 0) {
-                    this.pipes.splice(index, 1);
+                // Collision check (skip if invincible)
+                if (this.survivalTime >= this.invincibleUntil && this.checkCollision(this.player, pipe)) {
+                    pipeHit = true;
                 }
             });
+            this.pipes = this.pipes.filter(pipe => pipe.x + this.pipeWidth >= 0);
+
+            if (pipeHit) {
+                this.hitObstacle();
+                return;
+            }
+
+            // Medkits: move and collect
+            const toRemove = [];
+            this.medkits.forEach((m) => {
+                m.x -= this.speed * dt;
+                if (m.x + 30 < 0) toRemove.push(m);
+                else if (this.checkMedkitCollision(this.player, m)) {
+                    this.lives = Math.min(this.maxLives, this.lives + 1);
+                    toRemove.push(m);
+                    this.addNotification('+1 Life!', 'flappyCandy');
+                }
+            });
+            this.medkits = this.medkits.filter(m => !toRemove.includes(m));
         }
 
         // Notifications
@@ -162,11 +183,41 @@ export class FlappyGame extends Game {
         const maxPipeHeight = this.height - this.pipeGap - minPipeHeight;
         const topPipeHeight = Math.random() * (maxPipeHeight - minPipeHeight) + minPipeHeight;
 
-        this.pipes.push({
+        const pipe = {
             x: this.width,
             topHeight: topPipeHeight,
             passed: false
-        });
+        };
+        this.pipes.push(pipe);
+
+        // Spawn medkit in gap after 3 pipes (i.e. from 4th pipe onward)
+        if (this.pipes.length >= 4) {
+            this.medkits.push({
+                x: this.width + this.pipeWidth / 2,
+                y: topPipeHeight + this.pipeGap / 2,
+                size: 36
+            });
+        }
+    }
+
+    hitObstacle() {
+        if (this.lives > 1) {
+            this.lives--;
+            this.invincibleUntil = this.survivalTime + 1.2;
+            this.player.y = this.height / 2;
+            this.player.velocity = 0;
+            this.addNotification('Ouch! ' + this.lives + ' life left', 'info');
+        } else {
+            this.gameOver();
+        }
+    }
+
+    checkMedkitCollision(player, medkit) {
+        const px = player.x + player.width / 2;
+        const py = player.y + player.height / 2;
+        const half = (medkit.size || 36) / 2;
+        return Math.abs(px - medkit.x) < (player.width / 2 + half) &&
+            Math.abs(py - medkit.y) < (player.height / 2 + half);
     }
 
     checkCollision(player, pipe) {
@@ -257,6 +308,23 @@ export class FlappyGame extends Game {
             // Bottom Cap (The "mouth" of the bottom pipe)
             ctx.fillRect(pipe.x - 10, bottomY, this.pipeWidth + 20, 25);
             ctx.strokeRect(pipe.x - 10, bottomY, this.pipeWidth + 20, 25);
+        });
+
+        // Draw Medkits
+        const medkitSize = 36;
+        this.medkits.forEach((m) => {
+            if (this.assets.medkit) {
+                ctx.drawImage(
+                    this.assets.medkit,
+                    m.x - medkitSize / 2, m.y - medkitSize / 2,
+                    medkitSize, medkitSize
+                );
+            } else {
+                ctx.fillStyle = '#55efc4';
+                ctx.beginPath();
+                ctx.arc(m.x, m.y, medkitSize / 2, 0, Math.PI * 2);
+                ctx.fill();
+            }
         });
 
         // Draw Player

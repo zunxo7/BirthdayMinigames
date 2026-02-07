@@ -77,6 +77,92 @@
     padding: 1rem 2rem 2rem 2rem;
 }
 
+/* Updating overlay control */
+.admin-updating-card {
+    background: white;
+    border: 3px solid #2d2d2d;
+    border-radius: 16px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.admin-updating-status {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.admin-updating-label {
+    font-weight: 700;
+    color: #2d2d2d;
+}
+
+.admin-updating-badge {
+    font-weight: 900;
+    padding: 0.25rem 0.6rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+}
+
+.admin-updating-badge.off {
+    background: #e8e8e8;
+    color: #666;
+}
+
+.admin-updating-badge.on {
+    background: #ff6b9d;
+    color: white;
+}
+
+.admin-updating-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: #fff3cd;
+    border: 3px solid #2d2d2d;
+    border-radius: 12px;
+    font-weight: 800;
+    color: #856404;
+    cursor: pointer;
+}
+
+.admin-updating-btn:hover:not(:disabled) {
+    background: #ffe69c;
+}
+
+.admin-updating-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.admin-updating-btn-off {
+    background: #d4edda;
+    color: #155724;
+}
+
+.admin-updating-btn-off:hover:not(:disabled) {
+    background: #c3e6cb;
+}
+
+.admin-updating-hint {
+    margin: 0;
+    font-size: 0.85rem;
+    color: #666;
+}
+
+.admin-updating-hint code {
+    background: #eee;
+    padding: 0.1rem 0.35rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+}
+
 /* Section Header */
 .section-header,
 .admin-section-header {
@@ -266,6 +352,26 @@
     align-items: center;
     gap: 0.25rem;
     font-weight: 800;
+    cursor: pointer;
+}
+
+.price-tag-editing {
+    cursor: default;
+}
+
+.admin-card-price-input {
+    width: 4rem;
+    padding: 0.2rem 0.4rem;
+    font-size: inherit;
+    font-weight: 800;
+    border: 2px solid var(--border-dark);
+    border-radius: 6px;
+    text-align: right;
+}
+
+.admin-card-price-input:focus {
+    outline: none;
+    border-color: var(--color-primary);
 }
 
 .admin-btn {
@@ -718,6 +824,27 @@
     font-size: 1.2rem;
     font-weight: 800;
     margin: 0;
+    cursor: pointer;
+}
+
+.user-username:hover {
+    text-decoration: underline;
+}
+
+.user-username-input {
+    font-size: 1.2rem;
+    font-weight: 800;
+    margin: 0 0 0.1rem 0;
+    padding: 0.2rem 0.4rem;
+    width: 100%;
+    max-width: 180px;
+    border: 2px solid var(--border-dark);
+    border-radius: 8px;
+}
+
+.user-username-input:focus {
+    outline: none;
+    border-color: var(--color-primary);
 }
 
 .user-role {
@@ -789,13 +916,15 @@
 
 .user-danger-actions {
     display: flex;
-    gap: 1rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
     margin-top: auto;
 }
 
 .ban-btn-trigger,
 .unban-btn {
     flex: 1;
+    min-width: 120px;
     padding: 0.8rem;
     border-radius: 12px;
     border: 2px solid var(--border-dark);
@@ -811,6 +940,15 @@
 
 .unban-btn {
     background: #2ed573;
+}
+
+.delete-account-btn {
+    flex: 1;
+    min-width: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
 }
 
 /* Modals & Inputs */

@@ -53,8 +53,6 @@ export class PinataGame extends Game {
     }
 
     async start() {
-        await this.loadAssets();
-
         this.player = new Player(this);
         this.player.setRunStats(this.runStats);
         this.entities.push(this.player);
@@ -96,12 +94,14 @@ export class PinataGame extends Game {
         const effectiveSpawnInterval = this.survivalTime < easeSeconds
             ? earlySpawnInterval
             : this.spawnInterval;
+        const hardThreshold = 75;
         if (this.enemySpawnTimer > effectiveSpawnInterval) {
             this.enemySpawnTimer = 0;
             if (this.enemies.length < maxEnemies) {
                 this.spawnEnemy();
                 if (this.survivalTime >= easeSeconds && this.spawnInterval > 0.5) {
-                    this.spawnInterval -= 0.05;
+                    const drop = this.survivalTime >= hardThreshold ? 0.1 : 0.05;
+                    this.spawnInterval = Math.max(this.survivalTime >= hardThreshold ? 0.35 : 0.5, this.spawnInterval - drop);
                 }
             }
         }
@@ -278,11 +278,18 @@ export class PinataGame extends Game {
             }
         }
 
-        // Difficulty: ease in first 20s (0.5 → 1.0), then ramp as before
+        // Difficulty: ease in first 20s, then ramp. After 75s spike hard so upgrades are required
         const easeSeconds = 20;
-        const difficulty = time < easeSeconds
-            ? 0.5 + 0.5 * (time / easeSeconds)
-            : 1 + (time - easeSeconds) / 60;
+        const hardThreshold = 75;
+        let difficulty;
+        if (time < easeSeconds) {
+            difficulty = 0.5 + 0.5 * (time / easeSeconds);
+        } else if (time < hardThreshold) {
+            difficulty = 1 + (time - easeSeconds) / 60;
+        } else {
+            const baseAt75 = 1 + (hardThreshold - easeSeconds) / 60;
+            difficulty = baseAt75 + (time - hardThreshold) / 12; // steep ramp after 75s
+        }
 
         const enemy = new Enemy(this, side, type, difficulty);
         this.enemies.push(enemy);

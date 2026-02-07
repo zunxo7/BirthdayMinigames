@@ -1,0 +1,95 @@
+/* ===== SETTINGS PAGE ===== */
+.settings-page {
+    min-height: 100vh;
+    background: #fff0f3;
+    display: flex;
+    flex-direction: column;
+}
+
+.settings-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 2rem;
+    background: white;
+    border-bottom: 3px solid #2d2d2d;
+}
+
+.settings-header .page-title {
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: #2d2d2d;
+    margin: 0;
+}
+
+.settings-header .header-spacer {
+    width: 48px;
+}
+
+.settings-content {
+    flex: 1;
+    padding: 2rem;
+    max-width: 520px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.settings-card {
+    background: white;
+    border: 4px solid #2d2d2d;
+    border-radius: 20px;
+    padding: 1.5rem 1.75rem;
+    box-shadow: 0 6px 0 #2d2d2d;
+}
+
+.settings-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    cursor: pointer;
+}
+
+.settings-label {
+    font-weight: 700;
+    color: #2d2d2d;
+    font-size: 1rem;
+}
+
+.settings-toggle {
+    flex-shrink: 0;
+    width: 52px;
+    height: 28px;
+    border-radius: 14px;
+    border: 3px solid #2d2d2d;
+    background: #ddd;
+    position: relative;
+    transition: background 0.2s;
+}
+
+.settings-toggle.on {
+    background: #ff6b9d;
+}
+
+.settings-toggle-knob {
+    position: absolute;
+    top: 2px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: white;
+    border: 2px solid #2d2d2d;
+    transition: transform 0.2s;
+    left: 2px;
+}
+
+.settings-toggle.on .settings-toggle-knob {
+    transform: translateX(24px);
+}
+
+.settings-hint {
+    margin: 0.75rem 0 0;
+    font-size: 0.9rem;
+    color: #666;
+    line-height: 1.4;
+}

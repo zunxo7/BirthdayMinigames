@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Storefront, Megaphone, Plus, MagicWand, Users, Trash, Cake, Heart, Confetti, Gear, DotsSixVertical } from '@phosphor-icons/react';
+import { ArrowLeft, Storefront, Megaphone, Plus, MagicWand, Users, Trash, Cake, Heart, Confetti, Gear, DotsSixVertical, Warning } from '@phosphor-icons/react';
 import { supabase } from '../supabase';
 import ContentEditor from './ContentEditor';
 import AnnouncementManager from './AnnouncementManager';
@@ -20,11 +20,19 @@ const AdminPanel = ({ onBack }) => {
     const [banConfig, setBanConfig] = useState({ userId: null, username: '', reason: '' });
     const [showBanModal, setShowBanModal] = useState(false);
     const [showResetConfirm, setShowResetConfirm] = useState(false);
+    const [confirmDeleteUserId, setConfirmDeleteUserId] = useState(null);
+    const [confirmDeleteUsername, setConfirmDeleteUsername] = useState('');
     const [toastMessage, setToastMessage] = useState(null); // { message, type: 'success' | 'error' }
     const [dragItemId, setDragItemId] = useState(null);
     const [dragOverItemId, setDragOverItemId] = useState(null);
     const [editingTitleId, setEditingTitleId] = useState(null);
     const [editingTitleValue, setEditingTitleValue] = useState('');
+    const [editingPriceId, setEditingPriceId] = useState(null);
+    const [editingPriceValue, setEditingPriceValue] = useState('');
+    const [editingUsernameId, setEditingUsernameId] = useState(null);
+    const [editingUsernameValue, setEditingUsernameValue] = useState('');
+    const [updatingMode, setUpdatingMode] = useState(false);
+    const [updatingModeLoading, setUpdatingModeLoading] = useState(false);
 
     const showToast = (message, type = 'success') => {
         setToastMessage({ message, type });
@@ -35,6 +43,14 @@ const AdminPanel = ({ onBack }) => {
         if (activeTab === 'shop') fetchShopItems();
         if (activeTab === 'users') fetchUsers();
     }, [activeTab]);
+
+    useEffect(() => {
+        const fetchUpdating = async () => {
+            const { data } = await supabase.from('app_settings').select('value').eq('key', 'updating').maybeSingle();
+            setUpdatingMode(data?.value === 'true' || data?.value === '1');
+        };
+        fetchUpdating();
+    }, []);
 
     const fetchShopItems = async () => {
         setLoading(true);
@@ -170,6 +186,28 @@ const AdminPanel = ({ onBack }) => {
         setEditingTitleId(null);
     };
 
+    const startEditingPrice = (item) => {
+        setEditingPriceId(item.id);
+        setEditingPriceValue(String(item.price ?? 0));
+    };
+
+    const savePrice = async () => {
+        if (!editingPriceId) return;
+        const parsed = parseInt(editingPriceValue, 10);
+        const value = isNaN(parsed) || parsed < 0 ? 0 : parsed;
+        const { error } = await supabase
+            .from('shop_items')
+            .update({ price: value })
+            .eq('id', editingPriceId);
+        if (!error) {
+            setShopItems((prev) => prev.map((it) => (it.id === editingPriceId ? { ...it, price: value } : it)));
+            showToast('Price updated');
+        } else {
+            showToast(error.message || 'Failed to update price', 'error');
+        }
+        setEditingPriceId(null);
+    };
+
     const handleSaveItem = async (itemData) => {
         if (editingItem) {
             // Update existing
@@ -267,6 +305,76 @@ const AdminPanel = ({ onBack }) => {
         }
     };
 
+    const startEditingUsername = (user) => {
+        setEditingUsernameId(user.id);
+        setEditingUsernameValue(user.username || '');
+    };
+
+    const saveUsername = async () => {
+        if (!editingUsernameId) return;
+        const value = editingUsernameValue.trim();
+        if (!value) {
+            setEditingUsernameId(null);
+            return;
+        }
+        const { error } = await supabase
+            .from('profiles')
+            .update({ username: value })
+            .eq('id', editingUsernameId);
+        if (!error) {
+            setUsers((prev) => prev.map((u) => (u.id === editingUsernameId ? { ...u, username: value } : u)));
+            showToast('Username updated');
+        } else {
+            showToast(error?.message || 'Failed to update username', 'error');
+        }
+        setEditingUsernameId(null);
+    };
+
+    const handleDeleteAccount = async () => {
+        const userId = confirmDeleteUserId;
+        if (!userId) return;
+
+        setLoading(true);
+        try {
+            await supabase.from('purchases').delete().eq('user_id', userId);
+            await supabase.from('game_stats').delete().eq('user_id', userId);
+            const { error } = await supabase.from('profiles').delete().eq('id', userId);
+            if (error) throw error;
+            showToast('Account deleted');
+            setConfirmDeleteUserId(null);
+            setConfirmDeleteUsername('');
+            fetchUsers();
+        } catch (err) {
+            showToast(err?.message || 'Failed to delete', 'error');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleEnableUpdatingMode = async () => {
+        setUpdatingModeLoading(true);
+        const { error } = await supabase.from('app_settings').upsert({ key: 'updating', value: 'true' }, { onConflict: 'key' });
+        if (!error) {
+            setUpdatingMode(true);
+            showToast('Updating mode enabled. All users now see the overlay.');
+        } else {
+            showToast('Failed to enable', 'error');
+        }
+        setUpdatingModeLoading(false);
+    };
+
+    const handleDisableUpdatingMode = async () => {
+        setUpdatingModeLoading(true);
+        const { error } = await supabase.from('app_settings').upsert({ key: 'updating', value: 'false' }, { onConflict: 'key' });
+        if (!error) {
+            setUpdatingMode(false);
+            showToast('Updating mode disabled.');
+        } else {
+            showToast('Failed to disable', 'error');
+        }
+        setUpdatingModeLoading(false);
+    };
+
     const handleGlobalReset = async () => {
         setLoading(true);
         try {
@@ -358,6 +466,29 @@ const AdminPanel = ({ onBack }) => {
                 </div>
             )}
 
+            {/* Delete user confirmation */}
+            {confirmDeleteUserId && (
+                <div className="modal-backdrop" onClick={() => { setConfirmDeleteUserId(null); setConfirmDeleteUsername(''); }}>
+                    <div className="admin-modal" onClick={e => e.stopPropagation()}>
+                        <div className="modal-icon delete">
+                            <Trash size={32} weight="fill" />
+                        </div>
+                        <h2 className="modal-title">Delete?</h2>
+                        <p className="modal-subtitle">
+                            Permanently delete <strong>{confirmDeleteUsername}</strong>? All their candies, scores, and purchases will be removed. They will not be able to use the app. This cannot be undone.
+                        </p>
+                        <div className="modal-actions">
+                            <button className="modal-btn" onClick={() => { setConfirmDeleteUserId(null); setConfirmDeleteUsername(''); }}>
+                                Cancel
+                            </button>
+                            <button className="modal-btn delete" onClick={handleDeleteAccount}>
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Global Reset Modal */}
             {showResetConfirm && (
                 <div className="modal-backdrop" onClick={() => setShowResetConfirm(false)}>
@@ -424,6 +555,36 @@ const AdminPanel = ({ onBack }) => {
 
             {/* Content */}
             <div className="admin-content">
+                {/* Updating overlay control */}
+                <div className="admin-updating-card">
+                    <div className="admin-updating-status">
+                        <span className="admin-updating-label">Updating overlay:</span>
+                        <span className={`admin-updating-badge ${updatingMode ? 'on' : 'off'}`}>
+                            {updatingMode ? 'ON' : 'OFF'}
+                        </span>
+                    </div>
+                    {!updatingMode ? (
+                        <button
+                            type="button"
+                            className="admin-updating-btn"
+                            onClick={handleEnableUpdatingMode}
+                            disabled={updatingModeLoading}
+                        >
+                            <Warning size={18} weight="fill" />
+                            <span>Enable Updating mode</span>
+                        </button>
+                    ) : (
+                        <button
+                            type="button"
+                            className="admin-updating-btn admin-updating-btn-off"
+                            onClick={handleDisableUpdatingMode}
+                            disabled={updatingModeLoading}
+                        >
+                            <span>Disable Updating mode</span>
+                        </button>
+                    )}
+                </div>
+
                 {activeTab === 'shop' && (
                     <div className="shop-management">
                         <div className="admin-section-header">
@@ -491,10 +652,29 @@ const AdminPanel = ({ onBack }) => {
                                                 </div>
                                             </div>
                                             <div className="admin-card-price">
-                                                <div className="price-tag">
-                                                    <img src={candyIcon} alt="Candy" className="candy-icon-small" />
-                                                    {item.price}
-                                                </div>
+                                                {editingPriceId === item.id ? (
+                                                    <div className="price-tag price-tag-editing">
+                                                        <img src={candyIcon} alt="Candy" className="candy-icon-small" />
+                                                        <input
+                                                            type="number"
+                                                            min={0}
+                                                            className="admin-card-price-input"
+                                                            value={editingPriceValue}
+                                                            onChange={(e) => setEditingPriceValue(e.target.value)}
+                                                            onBlur={savePrice}
+                                                            onKeyDown={(e) => {
+                                                                if (e.key === 'Enter') savePrice();
+                                                                if (e.key === 'Escape') setEditingPriceId(null);
+                                                            }}
+                                                            autoFocus
+                                                        />
+                                                    </div>
+                                                ) : (
+                                                    <div className="price-tag" onClick={() => startEditingPrice(item)} title="Click to edit price">
+                                                        <img src={candyIcon} alt="Candy" className="candy-icon-small" />
+                                                        <span>{item.price}</span>
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
 
@@ -680,12 +860,29 @@ const AdminPanel = ({ onBack }) => {
                                         <div className="user-card-header">
                                             <div className="user-info">
                                                 <div className={`user-avatar-circle ${user.is_banned ? 'btn-toggle-active' : 'primary-bg'}`}>
-                                                    {user.username?.[0].toUpperCase()}
+                                                    {(editingUsernameId === user.id ? editingUsernameValue : user.username)?.[0]?.toUpperCase() || '?'}
                                                 </div>
                                                 <div>
-                                                    <h3 className="user-username">{user.username}</h3>
-                                                    <span className={`user-role ${user.username?.toLowerCase() === 'admin' ? 'admin' : ''}`}>
-                                                        {user.username?.toLowerCase() === 'admin' ? 'Administrator' : 'Player'}
+                                                    {editingUsernameId === user.id ? (
+                                                        <input
+                                                            type="text"
+                                                            className="user-username-input"
+                                                            value={editingUsernameValue}
+                                                            onChange={(e) => setEditingUsernameValue(e.target.value)}
+                                                            onBlur={saveUsername}
+                                                            onKeyDown={(e) => {
+                                                                if (e.key === 'Enter') saveUsername();
+                                                                if (e.key === 'Escape') setEditingUsernameId(null);
+                                                            }}
+                                                            autoFocus
+                                                        />
+                                                    ) : (
+                                                        <h3 className="user-username" onClick={() => startEditingUsername(user)} title="Click to edit username">
+                                                            {user.username}
+                                                        </h3>
+                                                    )}
+                                                    <span className={`user-role ${(editingUsernameId === user.id ? editingUsernameValue : user.username)?.toLowerCase() === 'admin' ? 'admin' : ''}`}>
+                                                        {(editingUsernameId === user.id ? editingUsernameValue : user.username)?.toLowerCase() === 'admin' ? 'Administrator' : 'Player'}
                                                     </span>
                                                 </div>
                                             </div>
@@ -720,24 +917,36 @@ const AdminPanel = ({ onBack }) => {
 
                                         <div className="user-danger-actions">
                                             {user.username?.toLowerCase() !== 'admin' && (
-                                                user.is_banned ? (
+                                                <>
+                                                    {user.is_banned ? (
+                                                        <button
+                                                            className="unban-btn"
+                                                            onClick={() => handleUnbanUser(user.id)}
+                                                        >
+                                                            Unban Player
+                                                        </button>
+                                                    ) : (
+                                                        <button
+                                                            className="ban-btn-trigger"
+                                                            onClick={() => {
+                                                                setBanConfig({ userId: user.id, username: user.username, reason: '' });
+                                                                setShowBanModal(true);
+                                                            }}
+                                                        >
+                                                            Ban Player
+                                                        </button>
+                                                    )}
                                                     <button
-                                                        className="unban-btn"
-                                                        onClick={() => handleUnbanUser(user.id)}
-                                                    >
-                                                        Unban Player
-                                                    </button>
-                                                ) : (
-                                                    <button
-                                                        className="ban-btn-trigger"
+                                                        className="admin-btn admin-btn-danger delete-account-btn"
                                                         onClick={() => {
-                                                            setBanConfig({ userId: user.id, username: user.username, reason: '' });
-                                                            setShowBanModal(true);
+                                                            setConfirmDeleteUserId(user.id);
+                                                            setConfirmDeleteUsername(user.username || 'this user');
                                                         }}
                                                     >
-                                                        Ban Player
+                                                        <Trash size={16} weight="bold" />
+                                                        Delete
                                                     </button>
-                                                )
+                                                </>
                                             )}
                                         </div>
                                     </div>

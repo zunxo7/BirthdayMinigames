@@ -49,6 +49,47 @@ body {
     animation: spin 1s linear infinite;
 }
 
+/* ===== UPDATING OVERLAY (blocks all interaction) ===== */
+.updating-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.85);
+    color: #fff;
+    pointer-events: auto;
+}
+
+.updating-content {
+    text-align: center;
+    padding: 2rem;
+}
+
+.updating-spinner {
+    width: 56px;
+    height: 56px;
+    margin: 0 auto 1.5rem;
+    border: 4px solid rgba(255, 255, 255, 0.3);
+    border-top-color: #ff6b9d;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+.updating-title {
+    font-size: 2rem;
+    font-weight: 900;
+    margin: 0 0 0.5rem;
+    letter-spacing: 0.02em;
+}
+
+.updating-sub {
+    font-size: 1rem;
+    opacity: 0.9;
+    margin: 0;
+}
+
 /* ===== GENERAL UI ===== */
 .candy-icon {
     width: 32px;

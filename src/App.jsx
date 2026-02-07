@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { SignOut, SmileySad } from '@phosphor-icons/react';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { supabase } from './supabase';
 import LoginModal from './components/LoginModal';
 import MainMenu from './components/MainMenu';
 import GameSelection from './components/GameSelection';
@@ -8,14 +9,37 @@ import GameCanvas from './components/GameCanvas';
 import Shop from './components/Shop';
 import Leaderboard from './components/Leaderboard';
 import AdminPanel from './components/AdminPanel';
+import Settings from './components/Settings';
 import AnnouncementBanner from './components/AnnouncementBanner';
 import GlobalEffects from './components/GlobalEffects';
+import UpdatingOverlay from './components/UpdatingOverlay';
 import { CandyMultiplierProvider, CandyMultiplierBadge } from './context/CandyMultiplierContext';
 
 const AppContent = () => {
   const { user, profile, loading, signOut } = useAuth();
-  const [screen, setScreen] = useState('menu'); // 'menu' | 'games' | 'play' | 'shop' | 'leaderboard' | 'panel'
+  const [screen, setScreen] = useState('menu'); // 'menu' | 'games' | 'play' | 'shop' | 'leaderboard' | 'settings' | 'panel'
   const [gameType, setGameType] = useState('pinata');
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  // Fetch "updating" flag from DB (when authenticated); re-check on visibility so admin can clear it
+  useEffect(() => {
+    if (!user) {
+      setIsUpdating(false);
+      return;
+    }
+    const fetchUpdating = async () => {
+      const { data } = await supabase.from('app_settings').select('value').eq('key', 'updating').maybeSingle();
+      setIsUpdating(data?.value === 'true' || data?.value === '1');
+    };
+    fetchUpdating();
+    const onVis = () => fetchUpdating();
+    document.addEventListener('visibilitychange', onVis);
+    const interval = setInterval(fetchUpdating, 20000);
+    return () => {
+      document.removeEventListener('visibilitychange', onVis);
+      clearInterval(interval);
+    };
+  }, [user]);
 
   // Show loading state
   if (loading) {
@@ -64,11 +88,15 @@ const AppContent = () => {
         <GlobalEffects />
         <CandyMultiplierBadge />
 
+        {/* Updating overlay: blocks all interaction when DB app_settings.updating = true (hidden for admin so they can turn it off from Panel) */}
+        {isUpdating && profile?.username?.toLowerCase() !== 'admin' && <UpdatingOverlay />}
+
       {screen === 'menu' && (
         <MainMenu
           onPlay={() => setScreen('games')}
           onShop={() => setScreen('shop')}
           onLeaderboard={() => setScreen('leaderboard')}
+          onSettings={() => setScreen('settings')}
           onPanel={() => setScreen('panel')}
         />
       )}
@@ -92,6 +120,9 @@ const AppContent = () => {
       )}
       {screen === 'leaderboard' && (
         <Leaderboard onBack={() => setScreen('menu')} />
+      )}
+      {screen === 'settings' && (
+        <Settings onBack={() => setScreen('menu')} />
       )}
       {screen === 'panel' && (
         <AdminPanel onBack={() => setScreen('menu')} />

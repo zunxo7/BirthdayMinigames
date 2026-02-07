@@ -399,6 +399,294 @@
     letter-spacing: 2px;
 }
 
+/* Game loading overlay (assets) — theme colors per game */
+.game-loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 28;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.game-loading-overlay.mode-pinata {
+    background: rgba(255, 182, 210, 0.6);
+}
+
+.game-loading-overlay.mode-flappy {
+    background: rgba(116, 185, 255, 0.6);
+}
+
+.game-loading-overlay.mode-cake {
+    background: rgba(139, 69, 19, 0.35);
+}
+
+.game-loading-content {
+    text-align: center;
+}
+
+.game-loading-spinner {
+    width: 48px;
+    height: 48px;
+    margin: 0 auto 1rem;
+    border: 4px solid rgba(255, 255, 255, 0.5);
+    border-top-color: #2d2d2d;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+.game-loading-overlay.mode-pinata .game-loading-spinner {
+    border-top-color: #ff6b9d;
+}
+
+.game-loading-overlay.mode-flappy .game-loading-spinner {
+    border-top-color: #74b9ff;
+}
+
+.game-loading-overlay.mode-cake .game-loading-spinner {
+    border-top-color: #8B4513;
+}
+
+.game-loading-text {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #2d2d2d;
+    margin: 0;
+}
+
+/* Tutorial overlay (before game start) — theme colors match game selection */
+.tutorial-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 30;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.tutorial-overlay.mode-pinata {
+    background: rgba(255, 182, 210, 0.5);
+}
+
+.tutorial-overlay.mode-pinata .tutorial-card {
+    border-color: #ff6b9d;
+    box-shadow: 0 8px 0 #ff6b9d;
+}
+
+.tutorial-overlay.mode-pinata .tutorial-start-btn {
+    background: #ff6b9d;
+}
+
+.tutorial-overlay.mode-flappy {
+    background: rgba(116, 185, 255, 0.45);
+}
+
+.tutorial-overlay.mode-flappy .tutorial-card {
+    border-color: #74b9ff;
+    box-shadow: 0 8px 0 #74b9ff;
+}
+
+.tutorial-overlay.mode-flappy .tutorial-start-btn {
+    background: #74b9ff;
+}
+
+.tutorial-overlay.mode-cake {
+    background: rgba(139, 69, 19, 0.3);
+}
+
+.tutorial-overlay.mode-cake .tutorial-card {
+    border-color: #8B4513;
+    box-shadow: 0 8px 0 #8B4513;
+}
+
+.tutorial-overlay.mode-cake .tutorial-start-btn {
+    background: #8B4513;
+}
+
+.tutorial-card {
+    background: white;
+    padding: 2rem 2.5rem;
+    border-radius: 24px;
+    border: 4px solid #2d2d2d;
+    max-width: 420px;
+    text-align: left;
+    box-shadow: 0 8px 0 #2d2d2d;
+}
+
+.tutorial-title {
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: #2d2d2d;
+    margin: 0 0 0.25rem 0;
+}
+
+.tutorial-game-name {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #666;
+    margin: 0 0 1.25rem 0;
+}
+
+.tutorial-section {
+    margin-bottom: 1rem;
+}
+
+.tutorial-label {
+    font-size: 0.85rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #888;
+    display: block;
+    margin-bottom: 0.35rem;
+}
+
+.tutorial-list {
+    margin: 0;
+    padding-left: 1.25rem;
+    font-weight: 600;
+    color: #2d2d2d;
+    line-height: 1.5;
+}
+
+.tutorial-goal {
+    margin: 0;
+    font-weight: 600;
+    color: #2d2d2d;
+    line-height: 1.45;
+}
+
+.tutorial-upgrades {
+    margin-top: 0.5rem;
+}
+
+.tutorial-upgrades .tutorial-label {
+    margin-bottom: 0.15rem;
+}
+
+.tutorial-upgrades-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.tutorial-upgrade-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 12px;
+    padding: 0.5rem 0.75rem;
+    min-width: 0;
+}
+
+.tutorial-upgrade-img {
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.tutorial-upgrade-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.tutorial-upgrade-text strong {
+    font-size: 0.9rem;
+    color: #2d2d2d;
+}
+
+.tutorial-upgrade-text span {
+    font-size: 0.75rem;
+    color: #666;
+    line-height: 1.3;
+}
+
+.tutorial-upgrades-subtitle {
+    font-size: 0.75rem;
+    color: #888;
+    margin: 0.1rem 0 0.5rem 0;
+    font-weight: 600;
+}
+
+.tutorial-lives-subtitle {
+    font-size: 0.85rem;
+    color: #666;
+    margin: 0.4rem 0 0;
+    font-weight: 600;
+}
+
+.tutorial-upgrades-note {
+    font-size: 0.85rem;
+    margin-top: 0.25rem;
+}
+
+.tutorial-icons-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.tutorial-icons-row:last-of-type {
+    margin-bottom: 0;
+}
+
+.tutorial-icon-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.2rem;
+}
+
+.tutorial-icon-img {
+    width: 36px;
+    height: 36px;
+    object-fit: contain;
+}
+
+.tutorial-icon-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #2d2d2d;
+}
+
+.tutorial-icon-item.tutorial-avoid .tutorial-icon-label {
+    color: #c0392b;
+}
+
+.tutorial-start-btn {
+    display: block;
+    width: 100%;
+    margin-top: 1.25rem;
+    padding: 0.9rem 1.5rem;
+    font-size: 1.25rem;
+    font-weight: 900;
+    color: white;
+    border: none;
+    border-radius: 16px;
+    cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.1s;
+    background: #2d2d2d;
+}
+
+.tutorial-start-btn:hover {
+    transform: scale(1.02);
+}
+
+.tutorial-start-btn:active {
+    transform: scale(0.98);
+}
+
 /* Helper Classes */
 .cursor-crosshair {
     cursor: crosshair;

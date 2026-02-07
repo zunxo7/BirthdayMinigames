@@ -125,6 +125,19 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    // Update user setting (e.g. show_tutorials)
+    const updateProfileSetting = async (key, value) => {
+        if (!user) return;
+        const { error } = await supabase
+            .from('profiles')
+            .update({ [key]: value })
+            .eq('id', user.id);
+        if (!error) {
+            setProfile(prev => ({ ...prev, [key]: value }));
+        }
+        return !error;
+    };
+
     useEffect(() => {
         // Get initial session
         supabase.auth.getSession().then(({ data: { session } }) => {
@@ -158,6 +171,7 @@ export const AuthProvider = ({ children }) => {
             signInAdmin,
             signOut,
             updateCandies,
+            updateProfileSetting,
             fetchProfile
         }}>
             {children}

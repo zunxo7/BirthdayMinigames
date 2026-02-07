@@ -21,6 +21,19 @@ const Shop = ({ onBack }) => {
         fetchData();
     }, [user]);
 
+    // Realtime: sync shop_items (prices, active state) without refresh
+    useEffect(() => {
+        const channel = supabase
+            .channel('shop_items_sync')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'shop_items' }, () => {
+                fetchData();
+            })
+            .subscribe();
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [user]);
+
     const fetchData = async () => {
         setLoading(true);
 

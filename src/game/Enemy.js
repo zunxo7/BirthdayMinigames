@@ -72,7 +72,8 @@ export class Enemy {
         this.state = 'walk';
         this.facingRight = false;
         this.attackRange = type === 'giant' ? 100 : (type === 'tiny' ? 60 : 80);
-        this.damage = type === 'giant' ? 15 : (type === 'tiny' ? 5 : 10);
+        const baseDamage = type === 'giant' ? 15 : (type === 'tiny' ? 5 : 10);
+        this.damage = Math.max(1, Math.floor(baseDamage * difficultyMultiplier));
         this.isDead = false;
         this.rewardGiven = false;
         this.knockbackX = 0;

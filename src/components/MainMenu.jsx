@@ -8,6 +8,7 @@ import {
     Sparkle,
     Confetti,
     GearSix,
+    SlidersHorizontal,
     Cake,
     Cookie
 } from '@phosphor-icons/react';
@@ -22,7 +23,7 @@ const FLOAT_CAKES = [
     { Icon: Cookie, size: 30, top: '18%', right: '8%', delay: 0.8, duration: 6 },
 ];
 
-const MainMenu = ({ onPlay, onShop, onLeaderboard, onPanel }) => {
+const MainMenu = ({ onPlay, onShop, onLeaderboard, onSettings, onPanel }) => {
     const { profile, signOut } = useAuth();
     const isAdmin = profile?.username?.toLowerCase() === 'admin';
 
@@ -117,6 +118,7 @@ const MainMenu = ({ onPlay, onShop, onLeaderboard, onPanel }) => {
                         { onClick: onPlay, className: 'primary', Icon: GameController, label: 'Play' },
                         { onClick: onShop, className: 'secondary', Icon: Storefront, label: 'Shop' },
                         { onClick: onLeaderboard, className: 'secondary', Icon: Trophy, label: 'Leaderboard' },
+                        { onClick: onSettings, className: 'secondary', Icon: SlidersHorizontal, label: 'Settings' },
                         ...(isAdmin ? [{ onClick: onPanel, className: 'admin', Icon: GearSix, label: 'Panel' }] : []),
                     ].map(({ onClick, className, Icon, label }, i) => (
                         <motion.button
