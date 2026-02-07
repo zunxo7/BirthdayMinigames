@@ -1,7 +1,19 @@
 import { Game } from './Game';
 import { Sprite } from './Sprite';
 import { Particle } from './Particle';
-import { CANVAS_WIDTH, CANVAS_HEIGHT, GROUND_Y_COORD } from './Constants'; // Using GROUND_Y_COORD calculated from Constants
+import { CANVAS_WIDTH, CANVAS_HEIGHT, GROUND_Y_COORD } from './Constants';
+import boboUrl from '../assets/Bobo.webp';
+import cakeUrl from '../assets/Cake.webp';
+import cupcakeUrl from '../assets/Cupcake.webp';
+import donutUrl from '../assets/Donut.webp';
+import lollipopUrl from '../assets/Lollipop.webp';
+import carrotUrl from '../assets/Carrot.webp';
+import eggplantUrl from '../assets/Eggplant.webp';
+import capsicumUrl from '../assets/Capsicum.webp';
+import broccoliUrl from '../assets/Broccoli.webp';
+import pickleUrl from '../assets/Pickle.webp';
+import heartUrl from '../assets/Heart.webp';
+import speedUrl from '../assets/Speed.webp';
 
 const WALK_FRAME_TIME = 0.15;
 const WALK_CYCLE_FRAMES = 4;
@@ -260,25 +272,25 @@ export class BoboGame extends Game {
             img.src = src;
         });
 
-        this.assets.bobo = await load('/src/assets/Bobo.webp');
+        this.assets.bobo = await load(boboUrl);
 
         this.assets.sweets = [
-            await load('/src/assets/Cake.webp'),
-            await load('/src/assets/Cupcake.webp'),
-            await load('/src/assets/Donut.webp'),
-            await load('/src/assets/Lollipop.webp')
+            await load(cakeUrl),
+            await load(cupcakeUrl),
+            await load(donutUrl),
+            await load(lollipopUrl)
         ];
 
         this.assets.veggies = [
-            await load('/src/assets/Carrot.webp'),
-            await load('/src/assets/Eggplant.webp'),
-            await load('/src/assets/Capsicum.webp'),
-            await load('/src/assets/Broccoli.webp')
+            await load(carrotUrl),
+            await load(eggplantUrl),
+            await load(capsicumUrl),
+            await load(broccoliUrl)
         ];
 
-        this.assets.pickle = await load('/src/assets/Pickle.webp');
-        this.assets.heart = await load('/src/assets/Heart.webp');
-        this.assets.speed = await load('/src/assets/Speed.webp');
+        this.assets.pickle = await load(pickleUrl);
+        this.assets.heart = await load(heartUrl);
+        this.assets.speed = await load(speedUrl);
 
         // Init player sprite
         if (this.assets.bobo) {

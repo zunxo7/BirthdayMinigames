@@ -1,5 +1,7 @@
 import { Game } from './Game';
 import { CANVAS_WIDTH, CANVAS_HEIGHT } from './Constants';
+import frostiUrl from '../assets/Frosti.webp';
+import candyIconUrl from '../assets/Candy Icon.webp';
 
 export class FlappyGame extends Game {
     constructor(canvas, onGameOver, onCurrencyUpdate) {
@@ -43,8 +45,8 @@ export class FlappyGame extends Game {
             img.src = src;
         });
 
-        this.assets.bird = await loadImage('/src/assets/Frosti.webp');
-        this.assets.candy = await loadImage('/src/assets/Candy Icon.webp');
+        this.assets.bird = await loadImage(frostiUrl);
+        this.assets.candy = await loadImage(candyIconUrl);
     }
 
     handleInput(type) {

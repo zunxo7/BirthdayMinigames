@@ -1,5 +1,11 @@
 import { InputHandler } from './InputHandler';
 import { CANVAS_WIDTH, CANVAS_HEIGHT } from './Constants';
+import crumbUrl from '../assets/Crumb.webp';
+import enemyUrl from '../assets/Evil Pinata.webp';
+import candyUrl from '../assets/Candy Icon.webp';
+import medkitUrl from '../assets/Medkit.webp';
+import speedUrl from '../assets/Speed.webp';
+import knockbackUrl from '../assets/Knockback.webp';
 
 export class Game {
     constructor(canvas, onGameOver) {
@@ -90,12 +96,12 @@ export class Game {
             img.src = src;
         });
 
-        this.assets.crumb = await loadImage('/src/assets/Crumb.webp');
-        this.assets.enemy = await loadImage('/src/assets/Evil Pinata.webp');
-        this.assets.candy = await loadImage('/src/assets/Candy Icon.webp');
-        this.assets.medkit = await loadImage('/src/assets/Medkit.webp');
-        this.assets.speed = await loadImage('/src/assets/Speed.webp');
-        this.assets.knockback = await loadImage('/src/assets/Knockback.webp');
+        this.assets.crumb = await loadImage(crumbUrl);
+        this.assets.enemy = await loadImage(enemyUrl);
+        this.assets.candy = await loadImage(candyUrl);
+        this.assets.medkit = await loadImage(medkitUrl);
+        this.assets.speed = await loadImage(speedUrl);
+        this.assets.knockback = await loadImage(knockbackUrl);
     }
 
     start() {
